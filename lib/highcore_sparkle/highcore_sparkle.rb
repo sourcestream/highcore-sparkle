@@ -19,7 +19,7 @@ class HighcoreSparkle
 
   def self.generate(template_path, template_name, stack_definition)
 
-    template_definition = File.join(template_path, "#{template_name}.yml")
+    template_definition = File.join(template_path, 'templates', "#{template_name}.yml")
     template = Options.symbolize_recursive(YAML.load_file(template_definition))
     template = Options.key_by_id_recursive(template)
 
@@ -36,9 +36,9 @@ class HighcoreSparkle
 
     # Load template
     sparkle = SparkleFormation.new(template_name) do
-      description "#{template_name} stack"
-
       @outputs = {}
+
+      registry!(:description, template_name)
 
       components.each do |id, component|
         config = component[:config].clone.merge({:template => template_name})
@@ -46,9 +46,16 @@ class HighcoreSparkle
       end
 
       registry!(:outputs, :outputs => @outputs)
-      registry!(:parameters, :components => components)
+
     end
-    sparkle.recompile
-    sparkle.to_json
+
+    sparkle_parameters = SparkleFormation.new(:parameters) do
+      registry!(:parameters,
+                :components => components,
+                :compiled_template => sparkle.to_json
+      )
+    end
+    cfn_template = sparkle.compile.dump!.merge(sparkle_parameters.compile.dump!)
+    MultiJson.dump(cfn_template)
   end
 end

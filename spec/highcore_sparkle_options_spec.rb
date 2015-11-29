@@ -49,7 +49,7 @@ RSpec.describe HighcoreSparkle, '#options' do
                   :id=>'test-ui1',
                   :template_component=>'test-ui',
                   :parameters=>{:instance_type=>{:id=>'instance_type', :value=>'t2.medium'}},
-                  :components=>{:api1=>{:id=>'test-api1', :template_component=>'test-api'}}}}
+                  :components=>{:'test-api1'=>{:id=>'test-api1', :template_component=>'test-api'}}}}
           parameters = {
               :vpc_id=>{:id=>'vpc_id', :value=>'vpc-11111111'},
               :subnet_ids=>{:id=>'subnet_ids', :value=>['subnet-11111111', 'subnet-22222222', 'subnet-33333333']}}
@@ -66,6 +66,8 @@ RSpec.describe HighcoreSparkle, '#options' do
             expect(generated_components[:testapi1][:config][:vpc_id]).to eq 'vpc-11111111'
             expect(generated_components[:testapi1][:parameters]).to include :vpc_id, :instance_type
             expect(generated_components[:testapi1][:parameters][:vpc_id]).to be_a Hash
+            expect(generated_components[:testui1][:components]).to include :testapi1
+            expect(generated_components[:testui1][:components][:testapi1]).to include :id
           end
 
           it 'keeps the context intact' do

@@ -14,6 +14,7 @@ Gem::Specification.new do |s|
   s.license = 'MIT'
   s.require_path = 'lib'
   s.summary = %q{Highcore adapter for sparkle formation}
+  s.add_dependency('sparkle_formation', '=0.2.12')
 
 end
 
