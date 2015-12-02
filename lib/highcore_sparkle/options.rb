@@ -90,6 +90,7 @@ class HighcoreSparkle
           v[:level] = 'component'
           if v[:value].nil? and stack_parameters[k] and stack_parameters[k][:value]
             v[:value] = stack_parameters[k][:value]
+            calculate_value!(v) unless stack_parameters[k][:type]
           end
         }
         component[:parameters] = stack_parameters.merge(component_parameters)
