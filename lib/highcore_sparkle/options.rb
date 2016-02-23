@@ -92,6 +92,7 @@ class HighcoreSparkle
             v[:value] = stack_parameters[k][:value]
             calculate_value!(v) unless stack_parameters[k][:type]
           end
+          stack_parameters.delete(:"#{id}_#{k}")
         }
         component[:parameters] = stack_parameters.merge(component_parameters)
         component[:config] = to_key_value(component[:parameters])
