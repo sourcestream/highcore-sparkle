@@ -5,7 +5,10 @@ RSpec.describe HighcoreSparkle, '#options' do
   context 'with a template containing components' do
     template = {
         'components' => [
-            {'id' => 'test-api', 'parameters' => [{'id' => 'instance_type', 'type' => 'string'}]},
+            {'id' => 'test-api', 'parameters' => [
+                {'id' => 'instance_type', 'type' => 'string'},
+                {'id' => 'authorized_users', 'type' => 'json'}
+            ]},
             {'id' => 'test-ui', 'parameters' => [{'id' => 'instance_type', 'type' => 'string'}]}
         ]
     }
@@ -15,7 +18,13 @@ RSpec.describe HighcoreSparkle, '#options' do
       symbolized_template = HighcoreSparkle::Options.symbolize_recursive(template)
       expect(symbolized_template.keys.first).to be_a Symbol
       expect(symbolized_template).to include :components
-      expect(symbolized_template[:components]).to include ({:id => 'test-api', :parameters => [{:id => 'instance_type', :type => 'string'}]})
+
+      expect(symbolized_template[:components].select { |component| component[:id] == 'test-api'}).not_to be_empty
+      test_api_component = symbolized_template[:components].select { |component| component[:id] == 'test-api'}.first
+      expect(test_api_component[:id]).to eq 'test-api'
+      expect(test_api_component[:parameters].select { |parameter| parameter[:id] == 'instance_type'}).not_to be_empty
+      test_api_parameters = test_api_component[:parameters].select { |parameter| parameter[:id] == 'instance_type'}.first
+      expect(test_api_parameters).to include :id => 'instance_type', :type => 'string'
     end
 
     context 'with a symbolized template' do
@@ -26,7 +35,12 @@ RSpec.describe HighcoreSparkle, '#options' do
         keyed_template = HighcoreSparkle::Options.key_by_id_recursive(symbolized_template)
         expect(keyed_template.keys.first).to be_a Symbol
         expect(keyed_template).to include :components
-        expect(keyed_template[:components]).to include :'test-api' => {:id => 'test-api', :parameters => {:instance_type => {:id => 'instance_type', :type => 'string'}}}
+        expect(keyed_template[:components]).to include :'test-api'
+        expect(keyed_template[:components][:'test-api']).to include :id, :parameters
+        test_api_template = keyed_template[:components][:'test-api']
+        expect(test_api_template[:id]).to eq 'test-api'
+        expect(test_api_template[:parameters]).to include :instance_type
+        expect(test_api_template[:parameters][:instance_type]).to include :id => 'instance_type', :type => 'string'
       end
 
       context 'with a keyed template' do
@@ -52,6 +66,7 @@ RSpec.describe HighcoreSparkle, '#options' do
                   :components=>{:'test-api1'=>{:id=>'test-api1', :template_component=>'test-api'}}}}
           parameters = {
               :vpc_id=>{:id=>'vpc_id', :value=>'vpc-11111111'},
+              :authorized_users=>{:id=>'authorized_users', :value=>'{"john.smith":"public-ssh-key"}'},
               :subnet_ids=>{:id=>'subnet_ids', :value=>['subnet-11111111', 'subnet-22222222', 'subnet-33333333']}}
           components_clone = components.clone
           parameters_clone = parameters.clone
@@ -64,6 +79,7 @@ RSpec.describe HighcoreSparkle, '#options' do
             expect(generated_components[:testui1]).to include :id, :template_component, :parameters, :config, :components
             expect(generated_components[:testapi1][:config]).to include :vpc_id, :instance_type
             expect(generated_components[:testapi1][:config][:vpc_id]).to eq 'vpc-11111111'
+            expect(generated_components[:testapi1][:config][:authorized_users]).to be_a Hash
             expect(generated_components[:testapi1][:parameters]).to include :vpc_id, :instance_type
             expect(generated_components[:testapi1][:parameters][:vpc_id]).to be_a Hash
             expect(generated_components[:testui1][:components]).to include :testapi1
