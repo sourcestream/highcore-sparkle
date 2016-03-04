@@ -85,6 +85,8 @@ class HighcoreSparkle
       stack_components = unify_components_ids(stack_components)
       stack_components.each { |id, component|
         template_component = template[:components][component[:template_component].to_sym]
+
+        # Parameters
         component_parameters = merge_parameters(template_component[:parameters], component[:parameters])
         component_parameters.each { |k,v|
           v[:level] = 'component'
@@ -96,11 +98,20 @@ class HighcoreSparkle
         }
         component[:parameters] = stack_parameters.merge(component_parameters)
         component[:config] = to_key_value(component[:parameters])
+
+        # Relations
         component[:components] ||= {}
         component[:components] = unify_components_ids(component[:components])
         component[:components].each { |dependency_id, dependency_data|
           component[:components][dependency_id] = stack_components[dependency_id]
         }
+
+        # Outputs
+        component[:outputs] ||= {}
+        template_component[:outputs].each {|k,v|
+          component[:outputs][k] = v.clone
+          v[:level] = 'component'
+        } if template_component[:outputs]
       }
       stack_components
     end

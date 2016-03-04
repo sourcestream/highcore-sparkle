@@ -5,11 +5,14 @@ RSpec.describe HighcoreSparkle, '#options' do
   context 'with a template containing components' do
     template = {
         'components' => [
-            {'id' => 'test-api', 'parameters' => [
+            {'id' => 'test-api',
+             'parameters' => [
                 {'id' => 'instance_type', 'type' => 'string'},
                 {'id' => 'authorized_users', 'type' => 'json'}
             ]},
-            {'id' => 'test-ui', 'parameters' => [{'id' => 'instance_type', 'type' => 'string'}]}
+            {'id' => 'test-ui',
+             'parameters' => [{'id' => 'instance_type', 'type' => 'string'}],
+             'outputs' => [{'id' => 'url', 'type' => 'string'}]}
         ]
     }
     template_clone = template.clone
@@ -63,8 +66,14 @@ RSpec.describe HighcoreSparkle, '#options' do
                   :id=>'test-ui1',
                   :template_component=>'test-ui',
                   :parameters=>{:instance_type=>{:id=>'instance_type', :value=>'t2.medium'}},
+                  :components=>{:'test-api1'=>{:id=>'test-api1', :template_component=>'test-api'}}},
+              :'test-ui2'=>{
+                  :id=>'test-ui2',
+                  :template_component=>'test-ui',
+                  :parameters=>{:instance_type=>{:id=>'instance_type', :value=>'t2.small'}},
                   :components=>{:'test-api1'=>{:id=>'test-api1', :template_component=>'test-api'}}}}
           parameters = {
+              :'testapi1_instance_type'=>{:id=>'testapi1_instance_type', :value=>'c4.large'},
               :vpc_id=>{:id=>'vpc_id', :value=>'vpc-11111111'},
               :authorized_users=>{:id=>'authorized_users', :value=>'{"john.smith":"public-ssh-key"}'},
               :subnet_ids=>{:id=>'subnet_ids', :value=>['subnet-11111111', 'subnet-22222222', 'subnet-33333333']}}
@@ -84,6 +93,9 @@ RSpec.describe HighcoreSparkle, '#options' do
             expect(generated_components[:testapi1][:parameters][:vpc_id]).to be_a Hash
             expect(generated_components[:testui1][:components]).to include :testapi1
             expect(generated_components[:testui1][:components][:testapi1]).to include :id
+            expect(generated_components[:testui1][:outputs]).to include :url
+            expect(generated_components[:testui1][:outputs][:url]).to include :id
+            expect(generated_components[:testui2][:outputs][:url]).not_to be(generated_components[:testui1][:outputs][:url])
           end
 
           it 'keeps the context intact' do
