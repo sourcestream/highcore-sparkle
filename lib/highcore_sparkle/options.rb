@@ -110,7 +110,7 @@ class HighcoreSparkle
         component[:outputs] ||= {}
         template_component[:outputs].each {|k,v|
           component[:outputs][k] = v.clone
-          v[:level] = 'component'
+          component[:outputs][k][:level] = 'component'
         } if template_component[:outputs]
       }
       stack_components
