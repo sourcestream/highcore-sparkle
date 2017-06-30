@@ -7,18 +7,21 @@ class HighcoreSparkle
 
   include HighcoreSparkle::Options
 
-  def self.load_library(path)
-    Dir.glob(File.join(path, "*")).each do |library|
-       dirs = Dir.glob(File.join(library, "**/*/")) << library
-       dirs.each do |dir|
-        method = "load_#{File.basename(library)}!"
-        SparkleFormation.public_send(method, dir) if SparkleFormation.respond_to? method
-      end
+  def self.load_library(sparkle, path)
+    if File.directory?(path)
+      sparkle.sparkle.add_sparkle(
+          SparkleFormation::SparklePack.new(:root => path)
+      )
     end
   end
 
-  def self.generate(template_path, template_name, stack_definition)
+  def self.load_requirements(sparkle, template)
+    template[:requirements].each { |req|
+      self.load_library(sparkle, Gem::Specification.find_by_name(req).gem_dir)
+    } if template[:requirements]
+  end
 
+  def self.generate(template_path, template_name, stack_definition)
     template_definition = File.join(template_path, 'templates', "#{template_name}.yml")
     template = Options.symbolize_recursive(YAML.load_file(template_definition))
     template = Options.key_by_id_recursive(template)
@@ -27,18 +30,16 @@ class HighcoreSparkle
     components_input = stack_input.delete(:components)
     components = Options.generate_components(template, components_input, stack_input)
 
-    template[:requirements].each { |req|
-      self.load_library(Gem::Specification.find_by_name(req).gem_dir)
-    } if template[:requirements]
-
-    # Load project libraries
-    self.load_library(template_path)
+    root_pack = SparkleFormation::SparklePack.new(
+        :root => template_path + '/pack'
+    )
 
     # Load template
-    sparkle = SparkleFormation.new(template_name) do
+    sparkle = SparkleFormation.new(template_name,
+                                   :sparkle => root_pack) do
       @outputs = {}
 
-      registry!(:description, template_name)
+      #registry!(:description, template_name)
 
       components.each do |id, component|
         config = component[:config].clone.merge({:template => template_name})
@@ -46,15 +47,17 @@ class HighcoreSparkle
       end
 
       registry!(:outputs, :outputs => @outputs)
-
     end
+    self.load_requirements(sparkle, template)
 
-    sparkle_parameters = SparkleFormation.new(:parameters) do
+    sparkle_parameters = SparkleFormation.new(:parameters, :sparkle => root_pack) do
       registry!(:parameters,
                 :components => components,
                 :compiled_template => sparkle.to_json
       )
     end
+    self.load_requirements(sparkle_parameters, template)
+
     cfn_template = sparkle.compile.dump!.merge(sparkle_parameters.compile.dump!)
     MultiJson.dump(cfn_template)
   end

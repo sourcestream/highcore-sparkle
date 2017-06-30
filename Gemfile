@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'sparkle_formation',  '=0.2.12'
+gem 'sparkle_formation'
 gem 'json'
 gem 'yaml'
 

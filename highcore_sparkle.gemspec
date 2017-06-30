@@ -2,7 +2,7 @@ $LOAD_PATH.unshift File.expand_path(File.dirname(__FILE__)) + '/lib/'
 
 Gem::Specification.new do |s|
   s.name               = "highcore_sparkle"
-  s.version            = "0.0.5"
+  s.version            = "0.0.6"
 
   s.authors = ["Aleksandr Saraikin"]
   s.date = %q{2015-11-14}
@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.license = 'MIT'
   s.require_path = 'lib'
   s.summary = %q{Highcore adapter for sparkle formation}
-  s.add_dependency('sparkle_formation', '=0.2.12')
+  s.add_dependency('sparkle_formation', '=3.0.24')
 
 end
 
